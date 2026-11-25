@@ -4,8 +4,8 @@
    Mismo diseño que la caja de los pasillos y la del recibidor (fuentes Python en el proyecto). */
 (function () {
   'use strict';
-  var app = document.getElementById('medida-app');
-  if (!app) return;
+  var apps = [].slice.call(document.querySelectorAll('.medida[data-medida]'));
+  if (!apps.length) return;
   var BASE = 'medida/';
   var JSPDF = BASE + 'jspdf.umd.min.js';   // jsPDF 2.5.1 (MIT), copia local
   var F = 'FiraCaja';
@@ -480,12 +480,13 @@
     return doc;
   }
 
-  // ------------------------------------------------------------------ interfaz
-  function $(s) { return app.querySelector(s); }
+  // ------------------------------------------------------------------ interfaz (puede haber varias en la página)
+  function ui(app) {
+  function $(s) { return app.querySelector('[data-mt="' + s.replace('#mt-', '') + '"]'); }
   function num(id, def) { var v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) ? v : def; }
   function read() {
-    var tapa = app.querySelector('input[name="mt-tapa"]:checked').value;
-    var arriba = app.querySelector('input[name="mt-arriba"]:checked').value;
+    var tapa = app.querySelector('input[data-r="tapa"]:checked').value;
+    var arriba = app.querySelector('input[data-r="arriba"]:checked').value;
     var c = { w: num('#mt-w', 0), h: num('#mt-h', 0), d: num('#mt-d', 0), tapa: tapa === 'si' ? 'si' : arriba, tw: num('#mt-tw', 0), td: num('#mt-td', 0), falda: num('#mt-f', 0) };
     var err = '';
     [['w', 'el ancho'], ['h', 'el alto'], ['d', 'el fondo']].forEach(function (k) { if (!(c[k[0]] >= 10 && c[k[0]] <= 250)) err = err || 'Revisa ' + k[1] + ': entre 10 y 250 cm.'; });
@@ -496,7 +497,7 @@
     return { c: c, err: err };
   }
   function sync() {
-    var si = app.querySelector('input[name="mt-tapa"]:checked').value === 'si';
+    var si = app.querySelector('input[data-r="tapa"]:checked').value === 'si';
     $('#mt-con').hidden = !si; $('#mt-sin').hidden = si;
   }
   var timer = null;
@@ -555,5 +556,7 @@
     new IntersectionObserver(function (es, o) { if (es.some(function (e) { return e.isIntersecting; })) { start(); o.disconnect(); } }).observe(app);
   } else start();
   sync();
+  }
+  apps.forEach(ui);
   window.PresenteMedida = { build: build, load: load, render: render, pdfReal: pdfReal, pdfMosaic: pdfMosaic };
 })();
